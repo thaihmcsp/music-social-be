@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Music = require("../models/musics");
 const uploadMp3Test = require("../middleware/MP3");
+const verifyToken = require("../middleware/verifyAuth");
 
 // @route GET api/musics
 // @desc Get musics
@@ -155,14 +156,10 @@ router.put("/update/:id", middlewareMp3, async(req, res) => {
 // search music
 router.get("/search/:name", async (req, res) => {
     try {
-      let music = await Music.find({
-           musicName: { $regex: req.params.name, options: 'i'  },
+      const music = await Music.find({
+           musicName: { $regex: req.params.name, $options: 'i'  },
       });
-      if(!music){
-        return res.json({ success: true, message: "music not found" });
-      }else{
-          return res.json({ success: true, data: music });
-      }
+      res.json({ success: true, data: music });
     } catch (error) {
       console.log(error);
       res.status(500).json({ success: false, message: "Internal server error" });
@@ -171,34 +168,25 @@ router.get("/search/:name", async (req, res) => {
   
   // like music
   
-  router.post("/like", async (req, res) => {
+  router.post("/like/:musicId", verifyToken, async (req, res) => {
     try {
-      // console.log(175);
-      let music = await Music.findById(req.body.musicId);
-      console.log(179, music.musicLike);
+      // check is liked
+      const music = await Music.findOne({_id: req.params.musicId, musicLike: req.userId});
 
-
-      let like = music.musicLike;
-      let liked = [];
-      if (like.length) {
-        liked = like.filter((like) => {
-          return like !== req.body.userId;
-        });
-      //   console.log(194, liked);
-        if (like.length != liked.length) {
-          like = liked;
-        } else {
-          like.push(req.body.userId);
-        }
-      } else {
-        like.push(req.body.userId);
+      let updateParams = {}
+      if(music){
+        updateParams = { $pull: { musicLike: { $in : [ null , req.userId ]}}};
+      }else{
+        updateParams = { $push: { musicLike: req.userId }}
       }
-      await Music.findOneAndUpdate(
-        { _id: req.body.musicId },
-        { musicLike: like }
-      );
-      let musicLike = await Music.findOne({ _id: req.body.musicId });
-      res.json({ success: true,data: {musicLike:musicLike.musicLike,length: musicLike.musicLike.length} });
+
+      const newMusic = await Music.findOneAndUpdate(
+        { _id: req.params.musicId }, 
+        updateParams,
+        { new: true, runValidators: true }
+      )
+
+      res.json({ success: true,data: {musicLike:newMusic.musicLike,length: newMusic.musicLike.length} });
     } catch (error) {
       console.log(error);
       res.status(500).json({ success: false, message: "Internal server error" });
