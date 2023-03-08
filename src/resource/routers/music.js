@@ -150,4 +150,58 @@ router.put("/update/:id", middlewareMp3, async(req, res) => {
             .json({ success: false, message: "Internal server error!!!!" });
     }
 });
+
+
+// search music
+router.get("/search/:name", async (req, res) => {
+    try {
+      let music = await Music.find({
+
+           musicName: { $regex: req.params.name, options: 'i'  },
+
+      });
+      res.json({ success: true, data: music });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ success: false, message: "Internal server error" });
+    }
+  });
+  
+  // like music
+  
+  router.post("/like", async (req, res) => {
+    try {
+      // console.log(175);
+      let music = await Music.findById(req.body.musicId);
+      console.log(179, music.musicLike);
+
+
+      let like = music.musicLike;
+      let liked = [];
+      if (like.length) {
+        liked = like.filter((like) => {
+          return like !== req.body.userId;
+        });
+      //   console.log(194, liked);
+        if (like.length != liked.length) {
+          like = liked;
+        } else {
+          like.push(req.body.userId);
+        }
+      } else {
+        like.push(req.body.userId);
+      }
+      await Music.findOneAndUpdate(
+        { _id: req.body.musicId },
+        { musicLike: like }
+      );
+      let musicLike = await Music.findOne({ _id: req.body.musicId });
+      res.json({ success: true,data: {musicLike:musicLike.musicLike,length: musicLike.musicLike.length} });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ success: false, message: "Internal server error" });
+    }
+  });
+
+
 module.exports = router;

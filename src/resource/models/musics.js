@@ -22,7 +22,8 @@ const MusicSchema = new Schema({
         ref: "categories",
     },
     musicLike: {
-        type: Number,
+        type: [{}],
+        ref: "users",
     },
     userId: {
         type: Schema.Types.ObjectId,
