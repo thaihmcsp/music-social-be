@@ -156,11 +156,13 @@ router.put("/update/:id", middlewareMp3, async(req, res) => {
 router.get("/search/:name", async (req, res) => {
     try {
       let music = await Music.find({
-
            musicName: { $regex: req.params.name, options: 'i'  },
-
       });
-      res.json({ success: true, data: music });
+      if(!music){
+        return res.json({ success: true, message: "music not found" });
+      }else{
+          return res.json({ success: true, data: music });
+      }
     } catch (error) {
       console.log(error);
       res.status(500).json({ success: false, message: "Internal server error" });
