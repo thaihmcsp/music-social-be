@@ -35,7 +35,7 @@ router.get("/", verifyToken, async(req, res) => {
 // @access public
 router.post("/register", upload.single("userAvatar"), async(req, res) => {
     const { userEmail, userPassword, userName, userAvatar, roleId } = req.body;
-
+    console.log(req.body)
     // Simple validation
     if (!userEmail || !userPassword || !userName)
         return res
@@ -128,6 +128,7 @@ router.post("/login", uploadlogin.array(), async(req, res) => {
 
             res.json({
                 success: true,
+                user: {...user._doc, userPassword: ''},
                 message: "Admin logged in successfully",
                 accessToken,
             });
@@ -152,6 +153,7 @@ router.post("/login", uploadlogin.array(), async(req, res) => {
 
             res.json({
                 success: true,
+                user: {...user._doc, userPassword: ''},
                 message: "User logged in successfully",
                 accessToken,
             });

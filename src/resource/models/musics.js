@@ -5,6 +5,7 @@ const MusicSchema = new Schema({
     musicName: {
         type: String,
         required: true,
+        unique: true
     },
     musicAuthor: {
         type: String,
