@@ -1,3 +1,5 @@
-uploadFile
+uploadFile/user/*
+uploadFile/Mp3/*
+uploadFile/ImgMp3/*
 package-lock.json
 node_modules
