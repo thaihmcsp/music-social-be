@@ -5,7 +5,7 @@ const MusicSchema = new Schema({
     musicName: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
     },
     musicAuthor: {
         type: String,
@@ -22,9 +22,12 @@ const MusicSchema = new Schema({
         type: Schema.Types.String,
         ref: "categories",
     },
-    musicLike: {
-        type: Number,
-    },
+    musicLike: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: "users",
+        },
+    ],
     userId: {
         type: Schema.Types.ObjectId,
         ref: "users",

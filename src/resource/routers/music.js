@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Music = require("../models/musics");
 const uploadMp3Test = require("../middleware/MP3");
+const verifyToken = require("../middleware/verifyAuth");
 
 // @route GET api/musics
 // @desc Get musics
@@ -150,4 +151,47 @@ router.put("/update/:id", middlewareMp3, async(req, res) => {
             .json({ success: false, message: "Internal server error!!!!" });
     }
 });
+
+
+// search music
+router.get("/search/:name", async (req, res) => {
+    try {
+      const music = await Music.find({
+           musicName: { $regex: req.params.name, $options: 'i'  },
+      });
+      res.json({ success: true, data: music });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ success: false, message: "Internal server error" });
+    }
+  });
+  
+  // like music
+  
+  router.post("/like/:musicId", verifyToken, async (req, res) => {
+    try {
+      // check is liked
+      const music = await Music.findOne({_id: req.params.musicId, musicLike: req.userId});
+
+      let updateParams = {}
+      if(music){
+        updateParams = { $pull: { musicLike: { $in : [ null , req.userId ]}}};
+      }else{
+        updateParams = { $push: { musicLike: req.userId }}
+      }
+
+      const newMusic = await Music.findOneAndUpdate(
+        { _id: req.params.musicId }, 
+        updateParams,
+        { new: true, runValidators: true }
+      )
+
+      res.json({ success: true,data: {musicLike:newMusic.musicLike,length: newMusic.musicLike.length} });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ success: false, message: "Internal server error" });
+    }
+  });
+
+
 module.exports = router;
