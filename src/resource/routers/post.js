@@ -111,4 +111,32 @@ router.put("/update/:id", upload.array(), async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error123!!!!" });
   }
 });
+
+// search post
+
+router.get("/search/:content", async (req, res) => {
+  try {
+    const post = await Post.find({
+      postContent: { $regex: req.params.content, $options: 'i' },
+    }).populate('music');
+
+    const music = await Music.find({
+      musicName: { $regex: req.params.content, $options: 'i' },
+    }).select('_id');
+
+    const musicId = music.map(d => d._id.toString());
+    const postId = post.map(p => p._id.toString());
+
+    const postFromMusic = await Post.find({
+      music: {$in: musicId}, 
+      _id: {$nin: postId}
+    }).populate('music');
+
+    res.json({ success: true, data: {...post, ...postFromMusic} });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
+
 module.exports = router;
